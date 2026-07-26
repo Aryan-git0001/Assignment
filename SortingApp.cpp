@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstdlib>   
+#include <cctype> 
 using namespace std;
 
 const int SIZE = 100; 
