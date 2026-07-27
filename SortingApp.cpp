@@ -1,21 +1,20 @@
 #include <iostream>
 #include <cstdlib>   
 #include <cctype> 
+#include <chrono>   
 using namespace std;
+using namespace std::chrono;
 
 const int SIZE = 100; 
-
-
 struct Record {
     int id;
     int value;
 };
 
-
 void fillRecords(Record records[], int size) {
     for (int i = 0; i < size; i++) {
-        records[i].id = i + 1;                 
-        records[i].value = rand() % 1000 + 1;  
+        records[i].id = i + 1;                 // record numbers: 1, 2, 3, ...
+        records[i].value = rand() % 1000 + 1;  // random number from 1 to 1000
     }
 }
 
@@ -28,15 +27,17 @@ void displayRecords(Record records[], int size) {
 }
 
 
-void selectionSort(Record records[], int size) {
+void selectionSort(Record records[], int size, long long &comparisons) {
+    comparisons = 0;
     for (int i = 0; i < size - 1; i++) {
         int smallestIndex = i;
         for (int j = i + 1; j < size; j++) {
+            comparisons++;
             if (records[j].value < records[smallestIndex].value) {
                 smallestIndex = j;
             }
         }
-        
+        // swap records[i] and records[smallestIndex]
         Record temp = records[i];
         records[i] = records[smallestIndex];
         records[smallestIndex] = temp;
@@ -44,11 +45,12 @@ void selectionSort(Record records[], int size) {
 }
 
 
-int partition(Record records[], int low, int high) {
-    int pivotValue = records[high].value; 
-    int i = low - 1;                      
+int partition(Record records[], int low, int high, long long &comparisons) {
+    int pivotValue = records[high].value;
+    int i = low - 1;                     
 
     for (int j = low; j < high; j++) {
+        comparisons++;
         if (records[j].value <= pivotValue) {
             i++;
             
@@ -58,29 +60,27 @@ int partition(Record records[], int low, int high) {
         }
     }
 
-    
     Record temp = records[i + 1];
     records[i + 1] = records[high];
     records[high] = temp;
 
-    return i + 1; 
+    return i + 1;
 }
 
-
-void quickSort(Record records[], int low, int high) {
+void quickSort(Record records[], int low, int high, long long &comparisons) {
     if (low < high) {
-        int pivotIndex = partition(records, low, high);
-        quickSort(records, low, pivotIndex - 1);   
-        quickSort(records, pivotIndex + 1, high);  
+        int pivotIndex = partition(records, low, high, comparisons);
+        quickSort(records, low, pivotIndex - 1, comparisons);   
+        quickSort(records, pivotIndex + 1, high, comparisons);
     }
 }
 
 
-void merge(Record records[], int left, int mid, int right) {
+void merge(Record records[], int left, int mid, int right, long long &comparisons) {
     int leftSize = mid - left + 1;
     int rightSize = right - mid;
 
-    
+   
     Record leftArray[leftSize];
     Record rightArray[rightSize];
 
@@ -95,6 +95,7 @@ void merge(Record records[], int left, int mid, int right) {
     int i = 0, j = 0, k = left;
 
     while (i < leftSize && j < rightSize) {
+        comparisons++;
         if (leftArray[i].value <= rightArray[j].value) {
             records[k] = leftArray[i];
             i++;
@@ -105,7 +106,7 @@ void merge(Record records[], int left, int mid, int right) {
         k++;
     }
 
-    
+  
     while (i < leftSize) {
         records[k] = leftArray[i];
         i++;
@@ -119,16 +120,14 @@ void merge(Record records[], int left, int mid, int right) {
 }
 
 
-void mergeSort(Record records[], int left, int right) {
+void mergeSort(Record records[], int left, int right, long long &comparisons) {
     if (left < right) {
         int mid = (left + right) / 2;
-        mergeSort(records, left, mid);
-        mergeSort(records, mid + 1, right);
-        merge(records, left, mid, right);
+        mergeSort(records, left, mid, comparisons);
+        mergeSort(records, mid + 1, right, comparisons);
+        merge(records, left, mid, right, comparisons);
     }
 }
-
-
 
 
 bool isSorted(Record records[], int size) {
@@ -141,32 +140,35 @@ bool isSorted(Record records[], int size) {
 }
 
 
-int binarySearch(Record records[], int size, int target) {
+int binarySearch(Record records[], int size, int target, long long &comparisons) {
+    comparisons = 0;
     int low = 0;
     int high = size - 1;
 
     while (low <= high) {
+        comparisons++;
         int mid = (low + high) / 2;
 
         if (records[mid].value == target) {
             return mid;               
         } else if (records[mid].value < target) {
-            low = mid + 1;            
+            low = mid + 1;          
         } else {
-            high = mid - 1;           
+            high = mid - 1;         
         }
     }
     return -1; 
 }
 
 
-int interpolationSearch(Record records[], int size, int target) {
+int interpolationSearch(Record records[], int size, int target, long long &comparisons) {
+    comparisons = 0;
     int low = 0;
     int high = size - 1;
 
     while (low <= high && target >= records[low].value && target <= records[high].value) {
+        comparisons++;
 
-        
         if (records[high].value == records[low].value) {
             if (records[low].value == target) {
                 return low;
@@ -174,14 +176,14 @@ int interpolationSearch(Record records[], int size, int target) {
             return -1;
         }
 
-        
+      
         int pos = low + (long long)(target - records[low].value) *
                   (high - low) / (records[high].value - records[low].value);
 
         if (records[pos].value == target) {
-            return pos;                 
+            return pos;                
         } else if (records[pos].value < target) {
-            low = pos + 1;              
+            low = pos + 1;             
         } else {
             high = pos - 1;             
         }
@@ -200,18 +202,33 @@ void sortMenu(Record records[], int size) {
     int choice;
     cin >> choice;
 
+    long long comparisons = 0;
+    string algoName;
+
+
+    auto startTime = high_resolution_clock::now();
+
     if (choice == 1) {
-        selectionSort(records, size);
-        cout << "Records sorted using Selection Sort.\n";
+        algoName = "Selection Sort";
+        selectionSort(records, size, comparisons);
     } else if (choice == 2) {
-        quickSort(records, 0, size - 1);
-        cout << "Records sorted using Quick Sort.\n";
+        algoName = "Quick Sort";
+        quickSort(records, 0, size - 1, comparisons);
     } else if (choice == 3) {
-        mergeSort(records, 0, size - 1);
-        cout << "Records sorted using Merge Sort.\n";
+        algoName = "Merge Sort";
+        mergeSort(records, 0, size - 1, comparisons);
     } else {
         cout << "Invalid choice.\n";
+        return;
     }
+
+  
+    auto endTime = high_resolution_clock::now();
+    double milliseconds = duration<double, milli>(endTime - startTime).count();
+
+    cout << "\nRecords sorted using " << algoName << ".\n";
+    cout << "Time taken       : " << milliseconds << " ms\n";
+    cout << "Comparisons made : " << comparisons << "\n";
 }
 
 
@@ -240,20 +257,34 @@ void searchMenu(Record records[], int size) {
     int target;
     cin >> target;
 
+    long long comparisons = 0;
+    string algoName;
     int index = -1;
 
+   
+    auto startTime = high_resolution_clock::now();
+
     if (choice == 1) {
-        index = binarySearch(records, size, target);
+        algoName = "Binary Search";
+        index = binarySearch(records, size, target, comparisons);
     } else {
-        index = interpolationSearch(records, size, target);
+        algoName = "Interpolation Search";
+        index = interpolationSearch(records, size, target, comparisons);
     }
 
+  
+    auto endTime = high_resolution_clock::now();
+    double milliseconds = duration<double, milli>(endTime - startTime).count();
+
+    cout << "\n[" << algoName << "]\n";
     if (index != -1) {
         cout << "Found! Value " << target << " belongs to Record ID "
              << records[index].id << " (position " << index << ").\n";
     } else {
         cout << "Value " << target << " was not found in the records.\n";
     }
+    cout << "Time taken       : " << milliseconds << " ms\n";
+    cout << "Comparisons made : " << comparisons << "\n";
 }
 
 
