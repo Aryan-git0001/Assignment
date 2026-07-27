@@ -13,8 +13,8 @@ struct Record {
 
 void fillRecords(Record records[], int size) {
     for (int i = 0; i < size; i++) {
-        records[i].id = i + 1;                 // record numbers: 1, 2, 3, ...
-        records[i].value = rand() % 1000 + 1;  // random number from 1 to 1000
+        records[i].id = i + 1;                 
+        records[i].value = rand() % 1000 + 1;  
     }
 }
 
@@ -37,7 +37,7 @@ void selectionSort(Record records[], int size, long long &comparisons) {
                 smallestIndex = j;
             }
         }
-        // swap records[i] and records[smallestIndex]
+       
         Record temp = records[i];
         records[i] = records[smallestIndex];
         records[smallestIndex] = temp;
