@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstdlib>   
+#include <cctype> 
 #include <chrono>
 #include <cstdlib>
 #include <iomanip>
